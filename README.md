@@ -2,8 +2,8 @@
 # Zara_CodingAssignment_1
 _Zara Ahmed\
 CSC 348-A: Computer Security\
-Coding Assignment No. 1\ 
-Submitted January 29, 2026_
+Coding Assignment No. 1\
+Submitted January 29, 2026_\
 --------------------------------------------------
 (x3) FILES TOTAL
 --------------------------------------------------
