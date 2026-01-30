@@ -55,7 +55,7 @@ def cross_correlation(X, Y, entries):
 #get_caesar_shift Function
 def get_caesar_shift(enc_message, expected_dist):
 
-    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     sym_len = len(letters)
     best_shift = 0 #best shift value
     best_CC_score = -1 #best cross-correlation score
@@ -67,16 +67,25 @@ def get_caesar_shift(enc_message, expected_dist):
         for char in enc_message:
             if char in letters:
                 index = letters.index(char) #find char's index in 'symbols'
-                new_index = (index - shift) % (sym_len - 1) #Caesar shift backwards
+                new_index = (index - shift) % (sym_len) #Caesar shift backwards
                 shifted_text += letters[new_index] #appends new character
             
-        #Get frequency number values
-        frequency = frequency_analysis(shifted_text)
+        #Calculates frequency number values of only A-Z (no spaces)
+        count = {}
+        for char in letters:
+            count[char] = 0
+        for char in shifted_text:
+            if char in count:
+                count[char] += 1
+        total = len(shifted_text)
+        frequency = {}
+        for char in letters:
+            frequency[char] = count[char] / total
 
-        #Get CC Score
-        entries = [letter for letter in expected_dist if letter != " "]
-        CC_score = cross_correlation(frequency, expected_dist, entries)
-        ##########
+        #Get CC Score of only letters
+        entries = letters_only_expected.keys()
+        CC_score = cross_correlation(frequency, letters_only_expected, entries)
+        
         #Keep the (best) shift with HIGHEST associated CC score
         if CC_score > best_CC_score:
             best_CC_score = CC_score
@@ -92,20 +101,22 @@ def get_caesar_shift(enc_message, expected_dist):
 #get_vigenere_keyword Function
 def get_vigenere_keyword(enc_message, size, expected_dist):
     #alphabet
-    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     keyword = "" #initializing empty string to store keyword
-    clean_message = enc_message.replace(" ", "") #removes spaces from msg
-    #Create empty strings for columns w/ the same size as the key length
-    sep_messages = [""] * size
 
+    #Create empty strings where # of columns = the key length
+    sep_messages = [""] * size
+    i = 0
     #loop to distribute letters over columns
-    for i, char in enumerate(clean_message):
-        column = i % size
-        sep_messages[column] += char
+    for char in enc_message:
+        if char in letters: #only A-Z
+            column = i % size
+            sep_messages[column] += char #append char to proper column
+            i += 1
 
     #loops over each column
     for message in sep_messages:
-        shift = get_caesar_shift(message, expected_dist) #finds caesar shift
+        shift = get_caesar_shift(message, letters_only_expected) #finds caesar shift
         keyword += letters[shift] #converts shift value to a letter, then append to keyword
 
     return keyword
@@ -146,6 +157,13 @@ expected_dist = {' ': .1828846265,'E': .1026665037, 'T': .0751699827, 'A': .0653
 .0162490441,'P': .0150432428,'Y': .0142766662,'B': .0125888074,'V': 0.0079611644,'K': 0.0056096272,'X':
 0.0014092016,'J': 0.0009752181,'Q': 0.0008367550,'Z': 0.0005128469}
 
+#dictionary when not including space for CC calc purposes 
+letters_only_expected = {'E': .1026665037, 'T': .0751699827, 'A': .0653216702, 'O': .0615957725, 'N':
+.0571201113, 'I': .0566844326,'S': .0531700534,'R': .0498790855,'H': .0497856396,'L': .0331754796,'D':
+.0328292310,'U': .0227579536,'C': .0223367596,'M': .0202656783,'F': .0198306716,'W': .0170389377,'G':
+.0162490441,'P': .0150432428,'Y': .0142766662,'B': .0125888074,'V': 0.0079611644,'K': 0.0056096272,'X':
+0.0014092016,'J': 0.0009752181,'Q': 0.0008367550,'Z': 0.0005128469}
+
 #USER PROMPT
 enc_message = input("WELCOME TO CAESAR CRACKING PROGRAM!\nENTER ENCRYPTED TEXT: ")
 #OUTPUT
@@ -159,7 +177,7 @@ enc_message = input("\nWELCOME TO VIGENERE CRACKING PROGRAM USING KASISKI METHOD
 #Brute Force implementation
 print("\nVIGENERE CRACKING USING SIMPLIFIED KASISKI METHOD: \n")
 #brute force the length of the key til you find the right keyword
-for size in range(1, 20): #try key lengths 1 thru 20
+for size in range(2, 21): #try key lengths 2 thru 20
     keyword = get_vigenere_keyword(enc_message, size, expected_dist)
     #OUTPUT
     print("KEY LENGTH ", size, " -> ", keyword)
